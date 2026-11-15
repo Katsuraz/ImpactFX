@@ -33,7 +33,7 @@
           {
             "name": "Distortion",
             "type": "float",
-            "value": 0.007
+            "value": 0
           },
           {
             "name": "Punch",
