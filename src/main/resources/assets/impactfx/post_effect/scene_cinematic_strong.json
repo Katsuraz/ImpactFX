@@ -24,6 +24,21 @@
             "name": "Style",
             "type": "float",
             "value": 4
+          },
+          {
+            "name": "WaveRadius",
+            "type": "float",
+            "value": 0
+          },
+          {
+            "name": "Distortion",
+            "type": "float",
+            "value": 0
+          },
+          {
+            "name": "Punch",
+            "type": "float",
+            "value": 0
           }
         ]
       }
