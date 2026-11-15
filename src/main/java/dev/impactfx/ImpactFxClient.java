@@ -25,7 +25,7 @@ public final class ImpactFxClient implements ClientModInitializer {
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             if (client.level == null && !(client.gui.screen() instanceof ImpactConfigScreen)) ENGINE.clear();
         });
-        System.out.println("[ImpactFX] 0.1.0-alpha.1 installed (HUD rendering fallback mode)");
+        System.out.println("[ImpactFX] 0.3.0-alpha.1 loaded; power sequences and world effects are optional");
     }
 
     private static void renderHud(GuiGraphicsExtractor graphics, DeltaTracker tracker) {

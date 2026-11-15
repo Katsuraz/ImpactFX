@@ -6,6 +6,7 @@ import dev.impactfx.config.ImpactPreset;
 import dev.impactfx.gui.ImpactConfigScreen;
 import dev.impactfx.impact.ImpactEngine;
 import dev.impactfx.impact.ImpactMath;
+import dev.impactfx.impact.ImpactSequence;
 import net.minecraft.client.Minecraft;
 import net.minecraft.resources.Identifier;
 
@@ -17,12 +18,21 @@ import net.minecraft.resources.Identifier;
 public final class ImpactPostEffects {
     private static final Identifier[] SOFT = new Identifier[ImpactPreset.values().length];
     private static final Identifier[] STRONG = new Identifier[ImpactPreset.values().length];
+    private static final Identifier[][] OVERDRIVE = new Identifier[ImpactSequence.Beat.values().length][2];
+    private static final Identifier[] OVERDRIVE_CLEAN = new Identifier[2];
     static {
         for (ImpactPreset preset : ImpactPreset.values()) {
             String name = "scene_" + preset.name().toLowerCase(java.util.Locale.ROOT);
             SOFT[preset.ordinal()] = Identifier.fromNamespaceAndPath("impactfx", name + "_soft");
             STRONG[preset.ordinal()] = Identifier.fromNamespaceAndPath("impactfx", name + "_strong");
         }
+        for (ImpactSequence.Beat beat : ImpactSequence.Beat.values()) {
+            String name = beat.name().toLowerCase(java.util.Locale.ROOT);
+            OVERDRIVE[beat.ordinal()][0] = Identifier.fromNamespaceAndPath("impactfx", "scene_overdrive_" + name + "_soft");
+            OVERDRIVE[beat.ordinal()][1] = Identifier.fromNamespaceAndPath("impactfx", "scene_overdrive_" + name + "_strong");
+        }
+        OVERDRIVE_CLEAN[0] = Identifier.fromNamespaceAndPath("impactfx", "scene_overdrive_clean_soft");
+        OVERDRIVE_CLEAN[1] = Identifier.fromNamespaceAndPath("impactfx", "scene_overdrive_clean_strong");
     }
     private ImpactPostEffects() {}
 
@@ -43,9 +53,20 @@ public final class ImpactPostEffects {
                 && !(mc.gui.screen() instanceof ImpactConfigScreen)) return null;
         ImpactEngine.Frame frame = ImpactFxClient.ENGINE.frame(System.nanoTime());
         if (frame == null || frame.preset() == ImpactPreset.MINIMAL) return null;
-        float strength = ImpactMath.envelope(frame.progress(System.nanoTime())) * frame.strength();
+        long now = System.nanoTime();
+        float progress = frame.progress(now);
+        float strength = ImpactSequence.power(progress, frame.strength(), cfg.drama);
         Tier tier = tier(strength, cfg.reducedFlashes, cfg.reducedMotion);
         if (tier == Tier.NONE) return null;
+        if (frame.preset() == ImpactPreset.OVERDRIVE) {
+            ImpactSequence.Beat beat = ImpactSequence.beat(progress);
+            int tierIndex = tier == Tier.SOFT ? 0 : 1;
+            // User toggles must also disable the actual framebuffer disturbance.
+            if ((!cfg.shockwave && (beat == ImpactSequence.Beat.SHOCK || beat == ImpactSequence.Beat.ECHO))
+                    || (!cfg.screenPunch && (beat == ImpactSequence.Beat.SNAP || beat == ImpactSequence.Beat.STRIKE)))
+                return OVERDRIVE_CLEAN[tierIndex];
+            return OVERDRIVE[beat.ordinal()][tierIndex];
+        }
         return tier == Tier.STRONG
                 ? STRONG[frame.preset().ordinal()] : SOFT[frame.preset().ordinal()];
     }
