@@ -21,7 +21,7 @@ public final class ImpactPostEffects {
     private static final Identifier[][] OVERDRIVE = new Identifier[ImpactSequence.Beat.values().length][2];
     private static final Identifier[] OVERDRIVE_CLEAN = new Identifier[2];
     // 5x3 screen grid follows the location of each hit rather than fixed center.
-    private static final Identifier[][][][] OVERDRIVE_GRID = new Identifier[4][2][5][3];
+    private static final Identifier[][][][] OVERDRIVE_GRID = new Identifier[7][2][5][3];
     private static final Identifier[][][] CLEAN_GRID = new Identifier[2][5][3];
     static {
         for (ImpactPreset preset : ImpactPreset.values()) {
@@ -42,10 +42,10 @@ public final class ImpactPostEffects {
                 String weight = tier == 0 ? "_soft" : "_strong";
                 CLEAN_GRID[tier][gx][gy] = Identifier.fromNamespaceAndPath("impactfx",
                     "scene_overdrive_clean" + weight + location);
-                for(ImpactSequence.Beat beat:ImpactSequence.Beat.values()) {
-                    String name=beat.name().toLowerCase(java.util.Locale.ROOT);
-                    OVERDRIVE_GRID[beat.ordinal()][tier][gx][gy] = Identifier.fromNamespaceAndPath(
-                        "impactfx", "scene_overdrive_" + name + weight + location);
+                String[] names={"snap","strike","shock0","shock1","shock2","echo","clean"};
+                for(int stage=0;stage<names.length;stage++) {
+                    OVERDRIVE_GRID[stage][tier][gx][gy] = Identifier.fromNamespaceAndPath(
+                        "impactfx","scene_overdrive_" + names[stage] + weight + location);
                 }
             }
         }
@@ -84,7 +84,14 @@ public final class ImpactPostEffects {
             if ((!cfg.shockwave && (beat == ImpactSequence.Beat.SHOCK || beat == ImpactSequence.Beat.ECHO))
                     || (!cfg.screenPunch && (beat == ImpactSequence.Beat.SNAP || beat == ImpactSequence.Beat.STRIKE)))
                 return CLEAN_GRID[tierIndex][gx][gy];
-            return OVERDRIVE_GRID[beat.ordinal()][tierIndex][gx][gy];
+            int stage;
+            switch (beat) {
+                case SNAP -> stage=0;
+                case STRIKE -> stage=1;
+                case SHOCK -> stage=2+Math.min(2,Math.max(0,(int)((progress-.30f)/(.47f/3f))));
+                default -> stage=5;
+            }
+            return OVERDRIVE_GRID[stage][tierIndex][gx][gy];
         }
         return tier == Tier.STRONG
                 ? STRONG[frame.preset().ordinal()] : SOFT[frame.preset().ordinal()];
