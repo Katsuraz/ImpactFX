@@ -3,6 +3,7 @@ package dev.impactfx.render;
 import dev.impactfx.config.ImpactConfig;
 import dev.impactfx.impact.ImpactEngine;
 import dev.impactfx.impact.ImpactMath;
+import dev.impactfx.impact.ImpactSequence;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.world.entity.Entity;
@@ -19,7 +20,7 @@ public final class ImpactHudRenderer {
         final long now = System.nanoTime();
         float t = frame.progress(now);
         if (t >= 1f) return;
-        float strength = ImpactMath.envelope(t) * frame.strength();
+        float strength = ImpactSequence.power(t, frame.strength(), cfg.drama);
         int w = g.guiWidth(), h = g.guiHeight();
         if (w <= 0 || h <= 0 || strength <= 0) return;
         long anchor = project(mc.getCameraEntity(), frame.x(), frame.y(), frame.z(), w, h);
@@ -32,6 +33,7 @@ public final class ImpactHudRenderer {
             case RETRO -> retro(g,cfg,cx,cy,w,h,t,strength,motion);
             case CINEMATIC -> cinematic(g,cfg,cx,cy,w,h,t,strength,motion);
             case MINIMAL -> minimal(g,cfg,cx,cy,w,h,t,strength,motion);
+            case OVERDRIVE -> overdrive(g,cfg,cx,cy,w,h,t,strength,motion);
         }
         if (frame.echo() && !cfg.reducedMotion && t > 0.38f) {
             float echo = strength * (1f - (t - 0.38f) / 0.62f) * 0.33f;
@@ -175,4 +177,95 @@ public final class ImpactHudRenderer {
         g.fill(x-r/2,y-r/2,x-r/2+3,y+r/2,argb);
         g.fill(x+r/2,y-r/2,x+r/2+3,y+r/2,argb);
     }
+    /**
+     * Overdrive is a paced four-beat finisher, not a recolored manga overlay.
+     * Its punches and stop-motion cuts are entirely screen-space: player physics,
+     * FOV and camera orientation are untouched.
+     */
+    private static void overdrive(GuiGraphicsExtractor g, ImpactConfig c,
+                                  int x,int y,int w,int h,float t,float a,float motion) {
+        ImpactSequence.Beat beat = ImpactSequence.beat(t);
+        int violet = c.palette==1?0xFF5378:c.palette==2?0xFFB04A:0xC39BFF;
+        if (c.tintWorld) {
+            int tint = beat == ImpactSequence.Beat.ECHO ? violet : 0x08070E;
+            g.fill(0,0,w,h,ImpactMath.argb(tint,a*(beat==ImpactSequence.Beat.SNAP?.12f:.24f)));
+        }
+        if (beat == ImpactSequence.Beat.SNAP) {
+            // One very short monochrome cut; fully suppressed in reduced-flashes mode.
+            if (c.fullScreenCuts && !c.reducedFlashes) {
+                g.fill(0,0,w,h,ImpactMath.argb(0x050409, a*.74f));
+                g.fill(0,y-2,w,y+2,ImpactMath.argb(0xFFFFFF,a*.72f));
+            }
+            drawCircle(g,x,y,(int)(12+Math.min(w,h)*.04),ImpactMath.argb(0xFFFFFF,a),5);
+            return;
+        }
+        if (beat == ImpactSequence.Beat.STRIKE) {
+            // Manga-panel cut + heavy radial ink spikes; no actual frame/tick freezing.
+            radial(g,c,x,y,w,h,0x050307,a*1.55f,18,21,motion*.86f,0.12f);
+            drawCircle(g,x,y,(int)(24+Math.min(w,h)*.085),ImpactMath.argb(0xFFFFFF,a),5);
+            if (c.shockwave)
+                drawCircle(g,x,y,(int)(36+Math.min(w,h)*.115),ImpactMath.argb(violet,a*.85f),3);
+            if (c.screenPunch && !c.reducedMotion) {
+                int edge=Math.max(2,(int)(h*.09*a));
+                g.fill(0,0,w,edge,ImpactMath.argb(0x040308,a*.73f));
+                g.fill(0,h-edge,w,h,ImpactMath.argb(0x040308,a*.73f));
+                // Fast edge recoil gives a visual punch with no camera rotation.
+                int side=Math.max(1,(int)(w*.024*a));
+                g.fill(0,0,side,h,ImpactMath.argb(0xFFFFFF,a*.32f));
+                g.fill(w-side,0,w,h,ImpactMath.argb(0xFFFFFF,a*.32f));
+            }
+            crack(g,x,y,Math.min(w,h)/3,ImpactMath.argb(0x0A0612,a*.9f));
+            return;
+        }
+        if (beat == ImpactSequence.Beat.SHOCK) {
+            float travel=ImpactSequence.ringProgress(t);
+            int radius=(int)((Math.min(w,h)*(.12f+travel*.57f))*motion);
+            if(c.shockwave) {
+                drawCircle(g,x,y,radius,ImpactMath.argb(0xFFFFFF,a*.85f),4);
+                drawCircle(g,x,y,radius+13,ImpactMath.argb(violet,a*.72f),3);
+                drawCircle(g,x,y,Math.max(4,radius-17),ImpactMath.argb(0x0B0815,a*.55f),2);
+            }
+            radial(g,c,x,y,w,h,violet,a*.78f,14,13,motion*(.45f+travel*.6f),.07f);
+            if(c.screenPunch && !c.reducedMotion) {
+                int border=(int)(h*.04*a);
+                g.fill(0,0,w,border,ImpactMath.argb(0x100B1B,a*.32f));
+                g.fill(0,h-border,w,h,ImpactMath.argb(0x100B1B,a*.32f));
+            }
+            return;
+        }
+        // Very faint double-wave echo on the recovery beat, not another hard flash.
+        if(c.shockwave) {
+            int radius=(int)(Math.min(w,h)*(.45f+.22f*t)*motion);
+            drawCircle(g,x,y,radius,ImpactMath.argb(violet,a*.46f),2);
+            drawCircle(g,x,y,radius+22,ImpactMath.argb(0xFFFFFF,a*.20f),1);
+        }
+    }
+
+    private static void drawCircle(GuiGraphicsExtractor g,int cx,int cy,int radius,int color,int thickness) {
+        if(radius<2) return;
+        int points=Math.max(28,Math.min(72,radius/2));
+        for (int i=0;i<points;i++) {
+            double angle=i*Math.PI*2/points;
+            int px=cx+(int)(Math.cos(angle)*radius);
+            int py=cy+(int)(Math.sin(angle)*radius);
+            g.fill(px-thickness,py-thickness,px+thickness+1,py+thickness+1,color);
+        }
+    }
+
+    private static void crack(GuiGraphicsExtractor g,int cx,int cy,int radius,int color) {
+        // Seven irregular ink spokes instead of a full-screen translucent texture.
+        for (int i=0;i<7;i++) {
+            double theta=i*Math.PI*2/7+0.33;
+            double dx=Math.cos(theta),dy=Math.sin(theta);
+            for (int j=1;j<=8;j++) {
+                float k=j/8f;
+                double side=(j%3==0?1.0:-.5)*(i%2==0?1:-1);
+                int px=cx+(int)(radius*k*dx+side*7*dy);
+                int py=cy+(int)(radius*k*dy-side*7*dx);
+                int thick=j%3==0?3:2;
+                g.fill(px-thick,py-thick,px+thick,py+thick,color);
+            }
+        }
+    }
+
 }
