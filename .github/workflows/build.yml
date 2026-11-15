@@ -21,7 +21,9 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '9.7.1'
-      - name: Validate custom post-effect shaders and JSON\n        run: python3 tools/check_shader_assets.py\n      - name: Compile, test logic and package
+      - name: Validate custom post-effect shaders and JSON
+        run: python3 tools/check_shader_assets.py
+      - name: Compile, test logic and package
         run: gradle --no-daemon build verifyLogic
       - name: Upload Fabric JAR and sources
         if: always()
