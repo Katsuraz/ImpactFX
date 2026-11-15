@@ -15,7 +15,8 @@ public final class ImpactConfig {
     public ImpactPreset explosionPreset = ImpactPreset.CINEMATIC;
     public ImpactPreset macePreset = ImpactPreset.OVERDRIVE;
     public int intensity = 85;          // 0..100
-    public int durationMs = 200;        // 60..400
+    public int durationMs = 250;        // base animation duration in ms, scalable
+    public int durationScale = 300;      // 100..500 %, applies to existing saved durations too
     public int cooldownMs = 180;        // 80..700
     public int speedLines = 70;         // 0..100
     public int cameraShake = 0;         // Reserved until camera integration is safe
@@ -64,7 +65,8 @@ public final class ImpactConfig {
         c.explosionPreset = ImpactPreset.parse(p.getProperty("explosionPreset", "CINEMATIC"),c.explosionPreset);
         c.macePreset = ImpactPreset.parse(p.getProperty("macePreset", "OVERDRIVE"),c.macePreset);
         c.intensity = num(p,"intensity",c.intensity,0,100);
-        c.durationMs = num(p,"durationMs",c.durationMs,60,400);
+        c.durationMs = num(p,"durationMs",c.durationMs,80,1400);
+        c.durationScale = num(p,"durationScale",c.durationScale,100,500);
         c.cooldownMs = num(p,"cooldownMs",c.cooldownMs,80,700);
         c.speedLines = num(p,"speedLines",c.speedLines,0,100);
         c.cameraShake = num(p,"cameraShake",c.cameraShake,0,100);
@@ -92,6 +94,7 @@ public final class ImpactConfig {
         p.setProperty("macePreset",macePreset.name());
         p.setProperty("intensity",Integer.toString(intensity));
         p.setProperty("durationMs",Integer.toString(durationMs));
+        p.setProperty("durationScale",Integer.toString(durationScale));
         p.setProperty("cooldownMs",Integer.toString(cooldownMs));
         p.setProperty("speedLines",Integer.toString(speedLines));
         p.setProperty("cameraShake",Integer.toString(cameraShake));

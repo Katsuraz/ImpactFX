@@ -51,7 +51,7 @@ public final class ImpactConfigScreen extends Screen {
         at(1,1,"Impact intensity: "+c.intensity+"%",b -> c.intensity=cycle(c.intensity,0,100,10));
         at(0,2,"Explosion: "+c.explosionPreset.label,b -> c.explosionPreset=c.explosionPreset.next());
         at(1,2,"Mace: "+c.macePreset.label,b -> c.macePreset=c.macePreset.next());
-        at(0,3,"Duration: "+c.durationMs+"ms",b -> c.durationMs=cycle(c.durationMs,60,400,20));
+        at(0,3,"Duration: "+c.durationMs+"ms",b -> c.durationMs=cycle(c.durationMs,80,1400,80));
         at(1,3,"Cooldown: "+c.cooldownMs+"ms",b -> c.cooldownMs=cycle(c.cooldownMs,80,700,40));
         at(0,4,"Max distance: "+c.maxDistance+"m",b -> c.maxDistance=cycle(c.maxDistance,8,128,8));
         at(1,4,"Impact Echo: "+state(c.echo),b -> c.echo=!c.echo);
@@ -97,11 +97,11 @@ public final class ImpactConfigScreen extends Screen {
         at(0,1,"Shockwaves: "+state(c.shockwave),b -> c.shockwave=!c.shockwave);
         at(1,1,"Impact cuts: "+state(c.fullScreenCuts),b -> c.fullScreenCuts=!c.fullScreenCuts);
         at(0,2,"Duration: "+c.durationMs+"ms",b -> c.durationMs=cycle(c.durationMs,60,400,20));
-        at(1,2,"Speed lines: "+c.speedLines+"%",b -> c.speedLines=cycle(c.speedLines,0,100,10));
+        at(1,2,"Length scale: "+c.durationScale+"%",b -> c.durationScale=cycle(c.durationScale,100,500,50));
         at(0,3,"Mace: "+c.macePreset.label,b -> c.macePreset=c.macePreset.next());
         at(1,3,"Explosion: "+c.explosionPreset.label,b -> c.explosionPreset=c.explosionPreset.next());
-        at(0,4,"Reduced flash: "+state(c.reducedFlashes),b -> c.reducedFlashes=!c.reducedFlashes);
-        at(1,4,"Reduced motion: "+state(c.reducedMotion),b -> c.reducedMotion=!c.reducedMotion);
+        at(0,4,"Speed lines: "+c.speedLines+"%",b -> c.speedLines=cycle(c.speedLines,0,100,10));
+        at(1,4,"Reduced flash: "+state(c.reducedFlashes),b -> c.reducedFlashes=!c.reducedFlashes);
     }
     private void at(int column,int row,String label,Consumer<Button> action) {
         button(left+column*(colWidth+10),top+row*24,colWidth,20,label,action);
@@ -125,7 +125,7 @@ public final class ImpactConfigScreen extends Screen {
         super.extractRenderState(g,mouseX,mouseY,delta);
         String[] pages={"Basics","Visuals","Comfort","Saved profiles","Impact Power"};
         g.centeredText(font,Component.literal("ImpactFX / "+pages[page]),width/2,10,0xFFFFFFFF);
-        g.centeredText(font,Component.literal("Minecraft 26.3 · Alpha 3 · Overdrive cinematic"),width/2,22,0xFFA6B8C6);
+        g.centeredText(font,Component.literal("Minecraft 26.3 · Alpha 4 · Spatial Impact"),width/2,22,0xFFA6B8C6);
         // Preview must also render on the config screen, otherwise the HUD is hidden behind it.
         ImpactFxClient.RENDERER.render(g,minecraft,c,ImpactFxClient.ENGINE.frame(System.nanoTime()));
     }

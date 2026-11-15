@@ -7,7 +7,8 @@ import dev.impactfx.config.ImpactPreset;
 public final class ImpactEngine {
     public enum Kind { EXPLOSION, MACE }
     public record Frame(Kind kind, ImpactPreset preset, double x, double y, double z,
-                        float strength, long startedNanos, long durationNanos, boolean echo) {
+                        float strength, long startedNanos, long durationNanos, boolean echo,
+                        double sourceX, double sourceY, double sourceZ, boolean hasSource) {
         public float progress(long now) {
             return ImpactMath.clamp((float)((now - startedNanos) / (double)durationNanos), 0, 1);
         }
@@ -29,6 +30,13 @@ public final class ImpactEngine {
 
     public boolean trigger(ImpactConfig cfg, Kind kind, double x, double y, double z,
                            float strength, long now, boolean preview) {
+        return trigger(cfg,kind,x,y,z,strength,now,preview,0,0,0,false);
+    }
+
+    /** Optional trajectory origin: e.g. player's mace hand -> actual targeted entity. */
+    public boolean trigger(ImpactConfig cfg, Kind kind, double x, double y, double z,
+                           float strength, long now, boolean preview,
+                           double sx, double sy, double sz, boolean hasSource) {
         if (!preview && (!cfg.enabled || (kind == Kind.EXPLOSION && !cfg.explosions) ||
              (kind == Kind.MACE && !cfg.mace))) return false;
         strength = ImpactMath.clamp(strength * cfg.intensity / 100f, 0f, 1f);
@@ -40,11 +48,12 @@ public final class ImpactEngine {
         }
         ImpactPreset preset = kind == Kind.EXPLOSION ? cfg.explosionPreset : cfg.macePreset;
         // Mace Overdrive gets extra breathing room for a deliberate four-beat sequence.
-        int length = cfg.durationMs;
+        int length = Math.min(2600, Math.max(80,cfg.durationMs) * Math.max(100,cfg.durationScale) / 100);
         if (kind == Kind.MACE && preset == ImpactPreset.OVERDRIVE)
-            length = Math.min(520, length + 90);
+            length = Math.min(2600, length + 120);
         long duration = length * 1_000_000L;
-        active = new Frame(kind,preset,x,y,z,strength,now,duration,cfg.echo && strength > 0.65f);
+        active = new Frame(kind,preset,x,y,z,strength,now,duration,cfg.echo && strength > 0.65f,
+                           sx,sy,sz,hasSource);
         lastSeen = now;
         lastStarted = now;
         lastKind = kind;

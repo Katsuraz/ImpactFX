@@ -17,6 +17,11 @@ public final class ImpactSequence {
     }
     public static float power( float progress, float frameStrength, int drama) {
         float scale = 1.0f + ImpactMath.clamp(drama / 100f, 0, 1) * .72f;
-        return ImpactMath.clamp(ImpactMath.envelope(progress) * frameStrength * scale, 0, 1);
+        float t = ImpactMath.clamp(progress,0,1);
+        float rise = ImpactMath.clamp(t/.055f,0,1);
+        float release = t < .66f ? 1.0f : (float)Math.pow(ImpactMath.clamp((1.0f-t)/.34f,0,1),1.25);
+        // Sustained force for long cinematic frames; no abrupt constant screen flashing.
+        float envelope = rise * release * (1.0f - t*.12f);
+        return ImpactMath.clamp(envelope * frameStrength * scale, 0, 1);
     }
 }
