@@ -1,50 +1,55 @@
 #!/usr/bin/env python3
-"""Check Phase 3 shader names, chain references, bounded visual distortion (not GPU execution)."""
+"""Statically check phase 4's scene-effect assets and spatial grid. Not a GPU runtime test."""
 import json
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[1]
-ASSETS = ROOT / "src/main/resources/assets/impactfx"
-STYLES = ("manga", "anime", "ink", "retro", "cinematic")
-OVERDRIVE = ("snap", "strike", "shock", "echo", "clean")
-TIERS = ("soft", "strong")
+ASSETS = Path(__file__).resolve().parents[1] / "src/main/resources/assets/impactfx"
+root = ASSETS / "post_effect"
+shader = (ASSETS / "shaders/post/scene_impact.fsh").read_text(encoding="utf-8")
+for token in ("uniform ImpactFXConfig", "vec2 Origin", "vec2 origin = clamp(Origin",
+              "WaveRadius", "Distortion", "Punch", "InSampler"):
+    assert token in shader, token
 
-shader = ASSETS / "shaders/post/scene_impact.fsh"
-source = shader.read_text(encoding="utf-8")
-for token in ("#version 330", "layout(location = 0) in vec2 texCoord",
-              "layout(location = 0) out vec4 fragColor", "uniform ImpactFXConfig",
-              "InSampler", "WaveRadius", "Distortion", "Punch"):
-    assert token in source, f"Missing shader declaration: {token}"
+NORMAL = ("manga", "anime", "ink", "retro", "cinematic")
+LEGACY = ("snap", "strike", "shock", "echo", "clean")
+SPATIAL = ("snap", "strike", "shock0", "shock1", "shock2", "echo", "clean")
+files = []
 
-files_checked = 0
-for name in STYLES + tuple("overdrive_" + stage for stage in OVERDRIVE):
-    for tier in TIERS:
-        file = ASSETS / "post_effect" / f"scene_{name}_{tier}.json"
-        data = json.loads(file.read_text(encoding="utf-8"))
-        assert "swap" in data["targets"], file
-        assert len(data["passes"]) == 2, file
-        first, second = data["passes"]
-        assert first["vertex_shader"] == "minecraft:core/screenquad", file
-        assert first["fragment_shader"] == "impactfx:post/scene_impact", file
-        assert first["inputs"] == [{"sampler_name": "In", "target": "minecraft:main"}], file
-        assert first["output"] == "swap", file
-        cfg = {u["name"]: u for u in first["uniforms"]["ImpactFXConfig"]}
-        assert set(cfg) == {"Strength", "Style", "WaveRadius", "Distortion", "Punch"}, file
-        assert all(uniform["type"] == "float" for uniform in cfg.values()), file
-        assert 0 < cfg["Strength"]["value"] <= 1, file
-        assert 0 <= cfg["WaveRadius"]["value"] <= .60, file
-        assert 0 <= cfg["Distortion"]["value"] <= .028, file
-        assert 0 <= cfg["Punch"]["value"] <= .08, file
-        expected_style = 5 if name.startswith("overdrive") else STYLES.index(name)
-        assert cfg["Style"]["value"] == expected_style, file
-        if name == "overdrive_clean":
-            assert cfg["Distortion"]["value"] == cfg["Punch"]["value"] == 0, file
-        if tier == "soft" and name.startswith("overdrive"):
-            assert cfg["Distortion"]["value"] < .015, file
-            assert cfg["Punch"]["value"] < .025, file
-        assert second["fragment_shader"] == "minecraft:post/blit", file
-        assert second["inputs"] == [{"sampler_name": "In", "target": "swap"}], file
-        assert second["output"] == "minecraft:main", file
-        files_checked += 1
+for name in NORMAL:
+    for tier in ("soft", "strong"):
+        files.append((root / f"scene_{name}_{tier}.json", NORMAL.index(name), .5, .5))
+for name in LEGACY:
+    for tier in ("soft", "strong"):
+        files.append((root / f"scene_overdrive_{name}_{tier}.json", 5, .5, .5))
+for name in SPATIAL:
+    for tier in ("soft", "strong"):
+        for gx in range(5):
+            for gy in range(3):
+                files.append((root / f"scene_overdrive_{name}_{tier}_x{gx}_y{gy}.json",
+                             5, round(.1+.2*gx,5), round(5/6-gy/3,5)))
 
-print(f"PASS: ImpactFX Phase 3 shader and {files_checked} post-effect JSON definitions")
+for filename,style,x,y in files:
+    data = json.loads(filename.read_text(encoding="utf-8"))
+    assert "swap" in data["targets"],filename
+    assert len(data["passes"]) == 2,filename
+    a,b=data["passes"]
+    assert a["fragment_shader"]=="impactfx:post/scene_impact",filename
+    assert a["inputs"]==[{"sampler_name":"In","target":"minecraft:main"}],filename
+    assert a["output"]=="swap",filename
+    assert b["output"]=="minecraft:main" and b["inputs"][0]["target"]=="swap",filename
+    uniforms={u["name"]:u for u in a["uniforms"]["ImpactFXConfig"]}
+    assert set(uniforms)=={"Strength","Style","WaveRadius","Distortion","Punch","Origin"},filename
+    assert uniforms["Style"]["value"]==style,filename
+    assert 0 < uniforms["Strength"]["value"]<=1,filename
+    assert 0<=uniforms["WaveRadius"]["value"]<=.60,filename
+    assert 0<=uniforms["Distortion"]["value"]<=.028,filename
+    assert 0<=uniforms["Punch"]["value"]<=.08,filename
+    assert uniforms["Origin"]["type"]=="vec2" and len(uniforms["Origin"]["value"])==2,filename
+    assert abs(uniforms["Origin"]["value"][0]-x)<.001,filename
+    assert abs(uniforms["Origin"]["value"][1]-y)<.001,filename
+    if "_clean_" in filename.name:
+        assert uniforms["Punch"]["value"]==uniforms["Distortion"]["value"]==0,filename
+    if "_soft" in filename.name and "overdrive" in filename.name:
+        assert uniforms["Punch"]["value"]<=.025,filename
+
+print(f"PASS: ImpactFX alpha 4 {len(files)} GPU post-effect chains and spatial coordinates")

@@ -42,6 +42,10 @@ public class ImpactLogicChecks {
         ImpactEngine.Frame heavy=over.frame(start+10_000_000L);
         check(heavy.preset()==ImpactPreset.OVERDRIVE,"overdrive selected");
         check(heavy.durationNanos()==(high.durationMs * high.durationScale/100+120)*1_000_000L,"overdrive extended duration");
+        check(over.trigger(high,ImpactEngine.Kind.MACE,4,0,0,1f,start+2000000000L,false,0,2,0,true),"source-aware attack");
+        ImpactEngine.Frame anchored=over.frame(start+2000000100L);
+        check(anchored.hasSource() && anchored.sourceY()==2,"origin is attached to hit");
+        check(anchored.x()==4,"impact target is retained");
         check(ImpactSequence.power(.58f,.8f,100) > .7f,"long impact holds intensity");
         Path second=Files.createTempFile("impactfx-config-power", ".properties");
         high.drama=40; high.shockwave=false; high.screenPunch=false;

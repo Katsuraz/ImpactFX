@@ -1,8 +1,18 @@
 # ImpactFX — Cinematic Impact Frames for Fabric 26.3
 
-**Version:** 0.3.0-alpha.1 — Phase 3 Overdrive finisher (compilation is not runtime validation)
+**Version:** 0.4.0-alpha.1 — Phase 4 extended, spatially anchored impacts (compilation is not runtime validation)
 
 A lightweight, client-side Minecraft Fabric mod that adds stylized impact frames to explosions and successful mace smash attacks. The mod doesn't modify damage, knockback, physics, or time.
+
+## Phase 4 — Spatial impacts, longer duration and optional anime audio
+
+* **Cinematic length:** a new **Length Scale** slider (100–500%) multiplies your saved base duration. Default is 300%, including for existing Alpha 3 settings. The base duration slider also extends to 1,400 ms. Animations are capped at 2,600 ms to avoid indefinitely obscuring gameplay.
+* **Hit-space positions:** the HUD pulse is projected toward the real packet explosion coordinates or the approximate mace impact. For mace smashes performed by the local player, a directional trail appears from the player's attacking position toward the target/ground indicated by the crosshair. When accurate target information is unavailable, the trajectory is estimated rather than treated as authoritative.
+* **World shader anchors:** the GPU zoom/distortion no longer has a hard-coded center. It chooses the nearest cell in a **5-column × 3-row** grid around the projected hit. The HUD ring remains closer to the precise screen position.
+* **Moving distortion:** the strong Overdrive shockwave now moves through three distinct expansion stages.
+* **Long-session comfort:** in Mod Menu → ImpactFX → Impact Power you can reduce Duration Scale, disable Screen Punch or Shockwaves, or use Reduced Flashes.
+
+**Anime audio is intentionally not included in this public repository or JAR.** A separate private/local resource pack is generated from the video uploaded in the conversation; users must provide their own licensed audio for redistribution. The pack overrides the vanilla `entity.generic.explode` sound event, leaving fireworks and mace sounds unchanged. Audio clipped from television episodes can contain dialog or background music and should not be treated as clean isolated sound effects.
 
 ## Phase 3 — Impact Power / Overdrive
 
