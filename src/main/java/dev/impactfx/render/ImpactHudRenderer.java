@@ -23,8 +23,8 @@ public final class ImpactHudRenderer {
         float strength = ImpactSequence.power(t, frame.strength(), cfg.drama);
         int w = g.guiWidth(), h = g.guiHeight();
         if (w <= 0 || h <= 0 || strength <= 0) return;
-        long anchor = project(mc.getCameraEntity(), frame.x(), frame.y(), frame.z(), w, h);
-        int cx = (int)(anchor >>> 32), cy = (int)anchor;
+        ImpactProjection.Point anchor = ImpactProjection.project(mc.getCameraEntity(),frame.x(),frame.y(),frame.z(),w,h);
+        int cx = anchor.screenX(w), cy = anchor.screenY(h);
         float motion = cfg.reducedMotion ? 0.35f : 1f;
         switch (frame.preset()) {
             case MANGA -> manga(g,cfg,cx,cy,w,h,t,strength,motion);
@@ -34,6 +34,12 @@ public final class ImpactHudRenderer {
             case CINEMATIC -> cinematic(g,cfg,cx,cy,w,h,t,strength,motion);
             case MINIMAL -> minimal(g,cfg,cx,cy,w,h,t,strength,motion);
             case OVERDRIVE -> overdrive(g,cfg,cx,cy,w,h,t,strength,motion);
+        }
+        if (frame.kind() == ImpactEngine.Kind.MACE && frame.hasSource() && !cfg.reducedMotion) {
+            ImpactProjection.Point source = ImpactProjection.project(mc.getCameraEntity(),
+                frame.sourceX(),frame.sourceY(),frame.sourceZ(),w,h);
+            strokeFromSource(g,source.screenX(w),source.screenY(h),cx,cy,
+                             strength,cfg.palette==1?0xFF5A83:0xCDB8FF,t);
         }
         if (frame.echo() && !cfg.reducedMotion && t > 0.38f) {
             float echo = strength * (1f - (t - 0.38f) / 0.62f) * 0.33f;
@@ -266,6 +272,26 @@ public final class ImpactHudRenderer {
                 g.fill(px-thick,py-thick,px+thick,py+thick,color);
             }
         }
+    }
+
+    /** A directed strike trail from the attacking hand to the victim/ground. */
+    private static void strokeFromSource(GuiGraphicsExtractor g,int sx,int sy,int tx,int ty,
+                                         float intensity,int rgb,float progress) {
+        float dx=tx-sx,dy=ty-sy;
+        float distance=(float)Math.sqrt(dx*dx+dy*dy);
+        if(distance<8)return;
+        int steps=Math.min(35,Math.max(5,(int)(distance/7)));
+        float visible=ImpactMath.clamp((.85f-progress)*2.2f,0f,1f)*intensity;
+        if(visible<=.01)return;
+        for(int i=0;i<=steps;i++){
+            float u=i/(float)steps;
+            float taper=(float)Math.sin(u*Math.PI);
+            int x=Math.round(sx+dx*u),y=Math.round(sy+dy*u);
+            int sz=Math.max(1,Math.round(1+2*taper*visible));
+            g.fill(x-sz,y-sz,x+sz+1,y+sz+1,ImpactMath.argb(rgb,visible*(.4f+.5f*taper)));
+        }
+        // Source marker identifies where the force came from.
+        drawCircle(g,sx,sy,Math.max(4,(int)(7+intensity*12)),ImpactMath.argb(0xFFFFFF,visible*.55f),1);
     }
 
 }
