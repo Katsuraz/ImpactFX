@@ -13,6 +13,13 @@ public class ImpactLogicChecks {
         check(ImpactMath.alpha(20)==255 && ImpactMath.alpha(-1)==0,"alpha clamp");
         check(ImpactMath.envelope(.25f)>0 && ImpactMath.envelope(1f)==0,"animation envelope");
         check(ImpactPreset.MANGA.next()==ImpactPreset.ANIME,"presets order");
+        check(ImpactPreset.MINIMAL.next()==ImpactPreset.OVERDRIVE,"Overdrive is selectable");
+        check(ImpactSequence.beat(0f)==ImpactSequence.Beat.SNAP,"snap start");
+        check(ImpactSequence.beat(.12f)==ImpactSequence.Beat.STRIKE,"strike beat");
+        check(ImpactSequence.beat(.40f)==ImpactSequence.Beat.SHOCK,"shock beat");
+        check(ImpactSequence.beat(.95f)==ImpactSequence.Beat.ECHO,"echo beat");
+        check(ImpactSequence.power(.2f,.8f,100)>=ImpactSequence.power(.2f,.8f,0),"drama scales");
+        check(ImpactSequence.ringProgress(.2f)==0f && ImpactSequence.ringProgress(.9f)==1f,"ring clamps");
         ImpactConfig c=new ImpactConfig();
         Path temporary=Files.createTempFile("impactfx-check-", ".properties");
         c.durationMs=240; c.macePreset=ImpactPreset.INK; c.saveAt(temporary);
@@ -27,6 +34,19 @@ public class ImpactLogicChecks {
         check(engine.trigger(c,ImpactEngine.Kind.MACE,1,1,1,.8f,start+251_000_000L,false),"new event");
         check(engine.frame(start+255_000_000L).preset()==ImpactPreset.INK,"mace preset");
         check(ImpactMath.eventStrength(6,100,40)==0,"distant blasts are ignored");
+        ImpactConfig high=new ImpactConfig();
+        high.macePreset=ImpactPreset.OVERDRIVE;
+        ImpactEngine over=new ImpactEngine();
+        check(over.trigger(high,ImpactEngine.Kind.MACE,0,0,0,1f,start,false),"overdrive triggers");
+        ImpactEngine.Frame heavy=over.frame(start+10_000_000L);
+        check(heavy.preset()==ImpactPreset.OVERDRIVE,"overdrive selected");
+        check(heavy.durationNanos()==(high.durationMs+90)*1_000_000L,"overdrive extra duration");
+        Path second=Files.createTempFile("impactfx-config-power", ".properties");
+        high.drama=40; high.shockwave=false; high.screenPunch=false;
+        high.saveAt(second);
+        ImpactConfig checkCfg=ImpactConfig.loadAt(second);
+        check(checkCfg.drama==40 && !checkCfg.shockwave && !checkCfg.screenPunch,"power settings round-trip");
+        Files.deleteIfExists(second);
         System.out.println("PASS: ImpactFX logic checks");
     }
 }

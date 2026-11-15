@@ -1,8 +1,24 @@
 # ImpactFX — Cinematic Impact Frames for Fabric 26.3
 
-**Version:** 0.2.0-alpha.1 — Phase 2 scene post-processing (compiled CI builds are not equivalent to runtime testing)
+**Version:** 0.3.0-alpha.1 — Phase 3 Overdrive finisher (compilation is not runtime validation)
 
 A lightweight, client-side Minecraft Fabric mod that adds stylized impact frames to explosions and successful mace smash attacks. The mod doesn't modify damage, knockback, physics, or time.
+
+## Phase 3 — Impact Power / Overdrive
+
+**New:** Overdrive Finisher is a seventh preset designed mainly for mace smashes.
+It uses an intentional four-beat sequence:
+
+1. **SNAP** — brief monochrome impact cut.
+2. **STRIKE** — intense black-and-white ink silhouette and visual screen punch.
+3. **SHOCK** — expanding concentric shockwave, refracted world frame, radial speed lines.
+4. **ECHO** — soft violet afterimage; no additional hard flash.
+
+The world shader uses a handful of fixed short-duration shader passes (no per-frame framebuffer allocations), and the HUD impact remains anchored to the estimated hit direction. The **Impact Power** page provides an extra Drama slider, screen punch, shockwaves, speed lines and reduced-flash options.
+
+**This is an illusion of hit-stop and camera punch; the game's actual camera rotation, physics, ticks, multiplayer synchronization and attack rules are unchanged.** The GPU shockwave is centered on-screen for now; the HUD effects are projected around the impact position.
+
+Existing installs may have saved the old Manga mace preset; select **Overdrive Finisher** manually in Mod Menu → ImpactFX → Basics or Impact Power. World shaders remain independently togglable.
 
 ## Phase 2: scene-aware impact frames
 
@@ -18,8 +34,9 @@ Available looks:
 | Retro Arcade | Pixelation, limited-color quantization | Stepped arcade bursts |
 | Cinematic Impact | Desaturation, shadow contrast, vignette | Cinematic bars and rings |
 | Minimal Impact | **No extra GPU post pass** | Quiet shock ring |
+| Overdrive Finisher | Staged monochrome, zoom-punch and ripple | Heavy manga ink, cracks, expanding rings |
 
-Low and strong GPU variants are selected by impact strength, and automatically use the softer one with reduced-flashing or reduced-motion accessibility settings. If a custom shader fails to load or you experience conflicts, disable **World shaders** on the Visuals page to keep the HUD effects.
+Low and strong GPU variants (plus four staged Overdrive effects) are selected by impact strength, and automatically use the softer one with reduced-flashing or reduced-motion accessibility settings. If a custom shader fails to load or you experience conflicts, disable **World shaders** on the Visuals page to keep the HUD effects.
 
 The shader is active only during short impacts and uses Minecraft's own render graph, not raw OpenGL. Original shader/resource packs and multiplayer-provided effects are not intentionally cleared or replaced, but compatibility with Iris, Sodium, Vulkan and other effects still requires **in-game testing**.
 
@@ -45,6 +62,6 @@ See [Phase 2 test checklist](docs/PHASE2_TEST.md).
 
 ## Work still planned
 
-True per-impact GPU uniforms (smooth continuous shader intensity), optional shockwave refraction, richer animated brush masks, camera shake/hit-stop illusion, wider modded explosion detection, further compatibility and benchmark testing.
+More accurately world-positioned GPU shockwaves, true continuous shader parameters, camera feedback (without physics changes), richer brush masks, wider modded explosion detection, further compatibility and benchmark testing.
 
 Licensed MIT.
