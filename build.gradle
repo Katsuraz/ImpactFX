@@ -42,3 +42,14 @@ tasks.register('verifyLogic', JavaExec) {
     classpath = sourceSets.test.runtimeClasspath
     mainClass = 'dev.impactfx.impact.ImpactLogicChecks'
 }
+
+// The logic suite is a standalone Java main() runner, not a JUnit class.
+// Gradle 9.7+ otherwise fails :test when test sources have no JUnit tests.
+tasks.named('test', Test) {
+    failOnNoDiscoveredTests = false
+}
+
+// Make the dependency-free checks mandatory in every CI build.
+tasks.named('check') {
+    dependsOn tasks.named('verifyLogic')
+}
