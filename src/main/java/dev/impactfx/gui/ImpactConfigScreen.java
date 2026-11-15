@@ -61,11 +61,11 @@ public final class ImpactConfigScreen extends Screen {
         at(0,1,"World tint: "+state(c.tintWorld),b -> c.tintWorld=!c.tintWorld);
         at(1,1,"Impact cuts: "+state(c.fullScreenCuts),b -> c.fullScreenCuts=!c.fullScreenCuts);
         at(0,2,"Camera shake: unavailable",null);
-        at(1,2,"World shader: future phase",null);
+        at(1,2,"World shaders: "+state(c.worldShaders),b -> c.worldShaders=!c.worldShaders);
         at(0,3,"Manga / Anime / Ink",null);
         at(1,3,"Retro / Cinematic / Minimal",null);
-        at(0,4,"Individual event presets",null);
-        at(1,4,"Animated geometric frames",null);
+        at(0,4,"Separate event presets",null);
+        at(1,4,"World processing: 1+1 passes",null);
     }
     private void comfort() {
         at(0,0,"Reduced flashes: "+state(c.reducedFlashes),b -> c.reducedFlashes=!c.reducedFlashes);
@@ -76,8 +76,8 @@ public final class ImpactConfigScreen extends Screen {
         at(1,2,"Profiles on next page",b -> page=3);
         at(0,3,"No gameplay time changes",null);
         at(1,3,"No client tick freeze",null);
-        at(0,4,"No expensive shaders",null);
-        at(1,4,"Offscreen FBOs: none",null);
+        at(0,4,"Shader optional in Visuals",b -> {page=1;});
+        at(1,4,"HUD fallback always available",null);
     }
     private void profiles() {
         for (int slot=1;slot<=3;slot++) {
@@ -112,7 +112,7 @@ public final class ImpactConfigScreen extends Screen {
         super.extractRenderState(g,mouseX,mouseY,delta);
         String[] pages={"Basics","Visuals","Comfort","Saved profiles"};
         g.centeredText(font,Component.literal("ImpactFX / "+pages[page]),width/2,10,0xFFFFFFFF);
-        g.centeredText(font,Component.literal("Minecraft 26.3 · alpha preview · no scene shader"),width/2,22,0xFFA6B8C6);
+        g.centeredText(font,Component.literal("Minecraft 26.3 · Alpha 2 · scene shaders optional"),width/2,22,0xFFA6B8C6);
         // Preview must also render on the config screen, otherwise the HUD is hidden behind it.
         ImpactFxClient.RENDERER.render(g,minecraft,c,ImpactFxClient.ENGINE.frame(System.nanoTime()));
     }

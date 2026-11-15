@@ -27,7 +27,8 @@ public final class ImpactConfig {
     public boolean reducedMotion = false;
     public boolean hideDuringGui = true;
     public boolean showWithF1 = true;
-    public boolean tintWorld = true;    // Semi-transparent HUD tint, NOT a scene shader
+    public boolean tintWorld = true;    // Optional HUD tint
+    public boolean worldShaders = true;   // Disable for pure HUD fallback (shader compatibility)
 
     private static final Path ROOT = Path.of("config", "impactfx");
     private static final Path SETTINGS = ROOT.resolve("impactfx.properties");
@@ -73,6 +74,7 @@ public final class ImpactConfig {
         c.hideDuringGui = bool(p,"hideDuringGui",c.hideDuringGui);
         c.showWithF1 = bool(p,"showWithF1",c.showWithF1);
         c.tintWorld = bool(p,"tintWorld",c.tintWorld);
+        c.worldShaders = bool(p,"worldShaders",c.worldShaders);
         return c;
     }
     public void saveAt(Path path) {
@@ -96,6 +98,7 @@ public final class ImpactConfig {
         p.setProperty("hideDuringGui",Boolean.toString(hideDuringGui));
         p.setProperty("showWithF1",Boolean.toString(showWithF1));
         p.setProperty("tintWorld",Boolean.toString(tintWorld));
+        p.setProperty("worldShaders",Boolean.toString(worldShaders));
         try {
             Files.createDirectories(path.getParent());
             try (OutputStream out = Files.newOutputStream(path)) { p.store(out,"ImpactFX client settings"); }

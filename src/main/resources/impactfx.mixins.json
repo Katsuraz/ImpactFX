@@ -4,7 +4,8 @@
   "package": "dev.impactfx.mixin",
   "compatibilityLevel": "JAVA_25",
   "client": [
-    "ClientPacketListenerMixin"
+    "ClientPacketListenerMixin",
+    "GameRendererPostMixin"
   ],
   "injectors": {
     "defaultRequire": 1
