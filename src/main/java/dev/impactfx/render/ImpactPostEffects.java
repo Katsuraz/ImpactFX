@@ -20,6 +20,9 @@ public final class ImpactPostEffects {
     private static final Identifier[] STRONG = new Identifier[ImpactPreset.values().length];
     private static final Identifier[][] OVERDRIVE = new Identifier[ImpactSequence.Beat.values().length][2];
     private static final Identifier[] OVERDRIVE_CLEAN = new Identifier[2];
+    // 5x3 screen grid follows the location of each hit rather than fixed center.
+    private static final Identifier[][][][] OVERDRIVE_GRID = new Identifier[4][2][5][3];
+    private static final Identifier[][][] CLEAN_GRID = new Identifier[2][5][3];
     static {
         for (ImpactPreset preset : ImpactPreset.values()) {
             String name = "scene_" + preset.name().toLowerCase(java.util.Locale.ROOT);
@@ -33,6 +36,19 @@ public final class ImpactPostEffects {
         }
         OVERDRIVE_CLEAN[0] = Identifier.fromNamespaceAndPath("impactfx", "scene_overdrive_clean_soft");
         OVERDRIVE_CLEAN[1] = Identifier.fromNamespaceAndPath("impactfx", "scene_overdrive_clean_strong");
+        for(int gx=0;gx<5;gx++) for(int gy=0;gy<3;gy++) {
+            String location = "_x" + gx + "_y" + gy;
+            for(int tier=0;tier<2;tier++) {
+                String weight = tier == 0 ? "_soft" : "_strong";
+                CLEAN_GRID[tier][gx][gy] = Identifier.fromNamespaceAndPath("impactfx",
+                    "scene_overdrive_clean" + weight + location);
+                for(ImpactSequence.Beat beat:ImpactSequence.Beat.values()) {
+                    String name=beat.name().toLowerCase(java.util.Locale.ROOT);
+                    OVERDRIVE_GRID[beat.ordinal()][tier][gx][gy] = Identifier.fromNamespaceAndPath(
+                        "impactfx", "scene_overdrive_" + name + weight + location);
+                }
+            }
+        }
     }
     private ImpactPostEffects() {}
 
@@ -61,11 +77,14 @@ public final class ImpactPostEffects {
         if (frame.preset() == ImpactPreset.OVERDRIVE) {
             ImpactSequence.Beat beat = ImpactSequence.beat(progress);
             int tierIndex = tier == Tier.SOFT ? 0 : 1;
+            ImpactProjection.Point point = ImpactProjection.project(mc.getCameraEntity(),
+                frame.x(),frame.y(),frame.z(),mc.getWindow().getWidth(),mc.getWindow().getHeight());
+            int gx=point.gridX(), gy=point.gridY();
             // User toggles must also disable the actual framebuffer disturbance.
             if ((!cfg.shockwave && (beat == ImpactSequence.Beat.SHOCK || beat == ImpactSequence.Beat.ECHO))
                     || (!cfg.screenPunch && (beat == ImpactSequence.Beat.SNAP || beat == ImpactSequence.Beat.STRIKE)))
-                return OVERDRIVE_CLEAN[tierIndex];
-            return OVERDRIVE[beat.ordinal()][tierIndex];
+                return CLEAN_GRID[tierIndex][gx][gy];
+            return OVERDRIVE_GRID[beat.ordinal()][tierIndex][gx][gy];
         }
         return tier == Tier.STRONG
                 ? STRONG[frame.preset().ordinal()] : SOFT[frame.preset().ordinal()];

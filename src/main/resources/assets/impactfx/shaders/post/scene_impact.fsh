@@ -17,6 +17,7 @@ layout(std140) uniform ImpactFXConfig {
     float WaveRadius; // normalized around screen center
     float Distortion; // 0 for disabled, always <= 0.023 for the default power preset
     float Punch;      // transient scene-scale impulse; never changes the real camera
+    vec2 Origin;      // world-projected impact point, quantized to a screen grid
 };
 
 float luminance(vec3 color) {
@@ -72,12 +73,12 @@ vec3 stylize(vec2 uv, vec3 original) {
 }
 
 void main() {
-    vec2 origin = vec2(0.5);
+    vec2 origin = clamp(Origin,vec2(0.01),vec2(0.99));
     vec2 fromCenter = texCoord - origin;
     float aspect = max(0.5, min(3.0, InSize.x / max(InSize.y, 1.0)));
     vec2 corrected = vec2(fromCenter.x * aspect, fromCenter.y);
     float r = max(length(corrected), 0.00001);
-    // A centered distortion is used as a safe fallback. The HUD ring remains world-positioned.
+    // Distortion and punch are centered on the projected hit position.
     float band = exp(-pow((r - WaveRadius) / 0.038, 2.0));
     vec2 direction = normalize(corrected + vec2(0.000001));
     vec2 uv = origin + fromCenter / (1.0 + clamp(Punch, 0.0, 0.08));
