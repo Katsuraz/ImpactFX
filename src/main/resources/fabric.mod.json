@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "id": "impactfx",
+  "version": "${version}",
+  "name": "ImpactFX",
+  "description": "Directional, configurable, lightweight explosion and mace smash impact frames.",
+  "authors": [
+    "ImpactFX contributors"
+  ],
+  "license": "MIT",
+  "environment": "client",
+  "entrypoints": {
+    "client": [
+      "dev.impactfx.ImpactFxClient"
+    ],
+    "modmenu": [
+      "dev.impactfx.compat.ImpactModMenu"
+    ]
+  },
+  "mixins": [
+    "impactfx.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.20.1",
+    "minecraft": "26.3",
+    "java": ">=25",
+    "fabric-api": "*"
+  },
+  "suggests": {
+    "modmenu": "*"
+  }
+}

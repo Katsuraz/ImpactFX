@@ -1,0 +1,32 @@
+name: Build ImpactFX Fabric 26.3
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, master]
+  pull_request:
+
+jobs:
+  gradle-build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Java 25
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '25'
+      - name: Set up Gradle 9.7.1
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '9.7.1'
+      - name: Compile, test logic and package
+        run: gradle --no-daemon build verifyLogic
+      - name: Upload Fabric JAR and sources
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: impactfx-26.3-artifacts
+          path: build/libs/*.jar
+          if-no-files-found: warn
