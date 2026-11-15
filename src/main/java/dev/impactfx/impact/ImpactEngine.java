@@ -39,7 +39,11 @@ public final class ImpactEngine {
             if (active == null || strength < active.strength + 0.22f) return false;
         }
         ImpactPreset preset = kind == Kind.EXPLOSION ? cfg.explosionPreset : cfg.macePreset;
-        long duration = cfg.durationMs * 1_000_000L;
+        // Mace Overdrive gets extra breathing room for a deliberate four-beat sequence.
+        int length = cfg.durationMs;
+        if (kind == Kind.MACE && preset == ImpactPreset.OVERDRIVE)
+            length = Math.min(520, length + 90);
+        long duration = length * 1_000_000L;
         active = new Frame(kind,preset,x,y,z,strength,now,duration,cfg.echo && strength > 0.65f);
         lastSeen = now;
         lastStarted = now;

@@ -13,11 +13,11 @@ public final class ImpactConfig {
     public boolean explosions = true;
     public boolean mace = true;
     public ImpactPreset explosionPreset = ImpactPreset.CINEMATIC;
-    public ImpactPreset macePreset = ImpactPreset.MANGA;
+    public ImpactPreset macePreset = ImpactPreset.OVERDRIVE;
     public int intensity = 85;          // 0..100
-    public int durationMs = 170;        // 60..400
+    public int durationMs = 200;        // 60..400
     public int cooldownMs = 180;        // 80..700
-    public int speedLines = 55;         // 0..100
+    public int speedLines = 70;         // 0..100
     public int cameraShake = 0;         // Reserved until camera integration is safe
     public int palette = 0;             // 0..2
     public int maxDistance = 42;        // 8..128
@@ -28,6 +28,9 @@ public final class ImpactConfig {
     public boolean hideDuringGui = true;
     public boolean showWithF1 = true;
     public boolean tintWorld = true;    // Optional HUD tint
+    public boolean screenPunch = true;  // Screen-space punch illusion, no camera rotation
+    public boolean shockwave = true;
+    public int drama = 80;              // 0..100 extra dramatic impact (new in Alpha 3)
     public boolean worldShaders = true;   // Disable for pure HUD fallback (shader compatibility)
 
     private static final Path ROOT = Path.of("config", "impactfx");
@@ -59,7 +62,7 @@ public final class ImpactConfig {
         c.explosions = bool(p,"explosions",c.explosions);
         c.mace = bool(p,"mace",c.mace);
         c.explosionPreset = ImpactPreset.parse(p.getProperty("explosionPreset", "CINEMATIC"),c.explosionPreset);
-        c.macePreset = ImpactPreset.parse(p.getProperty("macePreset", "MANGA"),c.macePreset);
+        c.macePreset = ImpactPreset.parse(p.getProperty("macePreset", "OVERDRIVE"),c.macePreset);
         c.intensity = num(p,"intensity",c.intensity,0,100);
         c.durationMs = num(p,"durationMs",c.durationMs,60,400);
         c.cooldownMs = num(p,"cooldownMs",c.cooldownMs,80,700);
@@ -75,6 +78,9 @@ public final class ImpactConfig {
         c.showWithF1 = bool(p,"showWithF1",c.showWithF1);
         c.tintWorld = bool(p,"tintWorld",c.tintWorld);
         c.worldShaders = bool(p,"worldShaders",c.worldShaders);
+        c.drama = num(p,"drama",c.drama,0,100);
+        c.screenPunch = bool(p,"screenPunch",c.screenPunch);
+        c.shockwave = bool(p,"shockwave",c.shockwave);
         return c;
     }
     public void saveAt(Path path) {
@@ -99,6 +105,9 @@ public final class ImpactConfig {
         p.setProperty("showWithF1",Boolean.toString(showWithF1));
         p.setProperty("tintWorld",Boolean.toString(tintWorld));
         p.setProperty("worldShaders",Boolean.toString(worldShaders));
+        p.setProperty("drama",Integer.toString(drama));
+        p.setProperty("screenPunch",Boolean.toString(screenPunch));
+        p.setProperty("shockwave",Boolean.toString(shockwave));
         try {
             Files.createDirectories(path.getParent());
             try (OutputStream out = Files.newOutputStream(path)) { p.store(out,"ImpactFX client settings"); }

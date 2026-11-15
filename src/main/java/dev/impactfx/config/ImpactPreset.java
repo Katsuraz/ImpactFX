@@ -7,7 +7,8 @@ public enum ImpactPreset {
     INK("Ink Burst"),
     RETRO("Retro Arcade"),
     CINEMATIC("Cinematic Impact"),
-    MINIMAL("Minimal Impact");
+    MINIMAL("Minimal Impact"),
+    OVERDRIVE("Overdrive Finisher");
 
     public final String label;
     ImpactPreset(String label) { this.label = label; }
